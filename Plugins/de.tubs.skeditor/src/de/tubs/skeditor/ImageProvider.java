@@ -20,6 +20,9 @@ public class ImageProvider extends AbstractImageProvider {
 	public static final String IMG_CHANGE_CAT = PREFIX + "change_category";
 	public static final String IMG_SAFETY = PREFIX + "safety";
 
+	public static final String IMG_RUN = PREFIX + "run";
+	public static final String IMG_STOP = PREFIX + "stop";
+
 	@Override
 	protected void addAvailableImages() {
 		addImageFilePath(IMG_ARROW_HEAD, "icons/arrowhead.png");
@@ -35,6 +38,9 @@ public class ImageProvider extends AbstractImageProvider {
 
 		addImageFilePath(IMG_CHANGE_CAT, "icons/change_category.png");
 		addImageFilePath(IMG_SAFETY, "icons/safety.png");
+
+		addImageFilePath(IMG_RUN, "icons/run.png");
+		addImageFilePath(IMG_STOP, "icons/stop.png");
 
 	}
 
@@ -53,7 +59,11 @@ public class ImageProvider extends AbstractImageProvider {
 		case "sensor":
 			return IMG_SENSOR;
 		case "actuator":
-			return IMG_ACTUATOR;
+			return IMG_ACTUATOR;		
+		case "run":
+			return IMG_RUN;		
+		case "stop":
+			return IMG_STOP; 
 		default:
 			return null;
 		}

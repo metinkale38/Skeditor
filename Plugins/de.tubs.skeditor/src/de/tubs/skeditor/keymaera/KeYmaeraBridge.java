@@ -71,8 +71,8 @@ public class KeYmaeraBridge {
 			.setProvider(new edu.cmu.cs.ls.keymaerax.btactics.Z3ToolProvider(toScalaMap(getZ3Config())));
 
 		
-		edu.cmu.cs.ls.keymaerax.Configuration$.MODULE$
-			.setConfiguration(edu.cmu.cs.ls.keymaerax.FileConfiguration$.MODULE$);
+		//edu.cmu.cs.ls.keymaerax.Configuration$.MODULE$
+		//	.setConfiguration(edu.cmu.cs.ls.keymaerax.FileConfiguration$.MODULE$);
 		
 		
 		HashMap<String, String> javaConfig = new HashMap<String, String>();

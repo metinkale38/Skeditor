@@ -16,10 +16,6 @@ import org.eclipse.graphiti.features.custom.ICustomFeature;
 import org.eclipse.graphiti.mm.algorithms.GraphicsAlgorithm;
 import org.eclipse.graphiti.mm.algorithms.MultiText;
 import org.eclipse.graphiti.mm.algorithms.Text;
-import org.eclipse.graphiti.mm.algorithms.styles.Font;
-import org.eclipse.graphiti.mm.algorithms.styles.TextStyle;
-import org.eclipse.graphiti.mm.algorithms.styles.TextStyleRegion;
-import org.eclipse.graphiti.mm.algorithms.styles.UnderlineStyle;
 import org.eclipse.graphiti.mm.pictograms.Anchor;
 import org.eclipse.graphiti.mm.pictograms.AnchorContainer;
 import org.eclipse.graphiti.mm.pictograms.ContainerShape;
@@ -43,12 +39,12 @@ import de.tubs.skeditor.features.AddSafetyRequirementsFeature;
 import de.tubs.skeditor.features.ChangeCategoryFeature;
 import de.tubs.skeditor.features.CreateKeymaeraFileFeature;
 import de.tubs.skeditor.features.EditControllerFeature;
+import de.tubs.skeditor.features.EditProgramPathFeature;
 import de.tubs.skeditor.features.EditVariableFeature;
 import de.tubs.skeditor.features.ExportFeature;
 import de.tubs.skeditor.features.RunKeymaeraCheckFeature;
 import de.tubs.skeditor.features.SetRootNodeFeature;
 import de.tubs.skeditor.utils.ConstraintUtil;
-import de.tubs.skeditor.utils.ViewUtil;
 
 public class ToolBehaviorProvider extends DefaultToolBehaviorProvider {
 
@@ -63,6 +59,8 @@ public class ToolBehaviorProvider extends DefaultToolBehaviorProvider {
 			if (customFeature instanceof ExportFeature) {
 				entries.add(new ContextMenuEntry(customFeature, context));
 			} else if (customFeature instanceof RunKeymaeraCheckFeature) {
+				entries.add(new ContextMenuEntry(customFeature, context));
+			} else if (customFeature instanceof EditProgramPathFeature) {
 				entries.add(new ContextMenuEntry(customFeature, context));
 			} else if (customFeature instanceof EditControllerFeature) {
 				entries.add(new ContextMenuEntry(customFeature, context));
