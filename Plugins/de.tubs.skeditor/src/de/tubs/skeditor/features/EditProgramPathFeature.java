@@ -11,7 +11,6 @@ package de.tubs.skeditor.features;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 
 import org.eclipse.graphiti.features.IFeatureProvider;
 import org.eclipse.graphiti.features.context.ICustomContext;
@@ -74,10 +73,7 @@ public class EditProgramPathFeature extends AbstractCustomFeature {
 			Object bo = getBusinessObjectForPictogramElement(pes[0]);
 			if (bo instanceof Node) {
 				Node node = (Node) bo;
-				String current = "";
-				if (!node.getController().isEmpty()) {
-					current = node.getController().get(0).getCtrl();
-				}
+	
 
 				String path = askPath();
 
@@ -132,6 +128,7 @@ public class EditProgramPathFeature extends AbstractCustomFeature {
 				}
 				
 				node.setProgramPath(file.getAbsolutePath());
+				hasDoneChanges = true;
 
 			}
 
