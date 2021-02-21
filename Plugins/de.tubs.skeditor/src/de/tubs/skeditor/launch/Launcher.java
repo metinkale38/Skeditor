@@ -57,23 +57,22 @@ public class Launcher extends LaunchConfigurationDelegate {
 		worldPath = configuration.getAttribute(LaunchConfigurationAttributes.WORLD_PATH, (String) null);
 
 		new File(buildPath).mkdir();
-		
-	
+
 		try {
 			try {
 				parseSked(skedPath);
 				buildAndScheduleHybridProgram(graph.getNodes());
 				buildAndSchedulePrograms(graph.getNodes());
-				
+
 				// all tasks are scheduled, but not actually run, start roscore and gazebo
 				CMDRunner.cmd("/opt/ros/noetic/bin/roscore").dir(buildPath).run("roscore");
 				Thread.sleep(1000); // make sure roscore initialized
 				CMDRunner.cmd("rosrun gazebo_ros gazebo " + worldPath).dir(buildPath).run("gazebo");
 				Thread.sleep(5000); // make sure gazebo is inizialized
-				
+
 				out.println("Starting all Skills");
-				CMDRunner.runAllSheduled();			
-				
+				CMDRunner.runAllSheduled();
+
 			} catch (LaunchException | InterruptedException e) {
 				out.println();
 				out.println("Build failed: ");
@@ -101,7 +100,8 @@ public class Launcher extends LaunchConfigurationDelegate {
 		out.println();
 		out.println("Building programs...");
 		for (int i = 0; i < nodes.size(); i++) {
-			if(monitor.isCanceled()) return;
+			if (monitor.isCanceled())
+				return;
 			Node node = nodes.get(i);
 			out.print(node.getName().replace(" ", "_"));
 			out.print(": ");
@@ -136,7 +136,8 @@ public class Launcher extends LaunchConfigurationDelegate {
 
 	private void buildAndScheduleHybridProgram(List<Node> nodes) throws LaunchException {
 		for (Node node : nodes) {
-			if(monitor.isCanceled()) return;
+			if (monitor.isCanceled())
+				return;
 			if (node.getController() != null) {
 				for (int i = 0; i < node.getController().size(); i++) {
 					String ctrl = node.getController().get(i).getCtrl();
@@ -157,9 +158,22 @@ public class Launcher extends LaunchConfigurationDelegate {
 	private void execute(Node node) throws LaunchException {
 		String name = node.getName().replace(" ", "_");
 		File buildPath = new File(this.buildPath + "/" + name);
-		File execPath = new File(buildPath, "devel/lib/" + name + "/" + name);
+		File develLibPath = new File(buildPath, "devel/lib");
+		File execPath = null;
+		
+		// find executable in develLibPath
+		for (File folder : develLibPath.listFiles()) {
+			if (folder.isDirectory() && !folder.getName().equals("pkgconfig")) {
+				for (File file : folder.listFiles()) {
+					if (file.canExecute()) {
+						execPath = file;
+						break;
+					}
+				}
+			}
+		}
 
-		if (!execPath.exists())
+		if (execPath == null || !execPath.exists())
 			throw new LaunchException("could not find executable " + execPath.getAbsolutePath());
 
 		CMDRunner.cmd(execPath.getAbsolutePath()).dir(buildPath.getAbsolutePath()).scheduleTask(name);
