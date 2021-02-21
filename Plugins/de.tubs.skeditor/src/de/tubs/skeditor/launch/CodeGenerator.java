@@ -4,25 +4,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
+import de.tubs.skeditor.keymaera.KeYmaeraBridge;
 import de.tubs.skeditor.utils.FileUtils;
-import edu.cmu.cs.ls.keymaerax.codegen.CControllerGenerator;
-import edu.cmu.cs.ls.keymaerax.codegen.CGenerator;
-import edu.cmu.cs.ls.keymaerax.core.BaseVariable;
-import edu.cmu.cs.ls.keymaerax.core.Box;
-import edu.cmu.cs.ls.keymaerax.core.Formula;
-import edu.cmu.cs.ls.keymaerax.core.Imply;
-import edu.cmu.cs.ls.keymaerax.core.Program;
-import edu.cmu.cs.ls.keymaerax.core.StaticSemantics;
-import edu.cmu.cs.ls.keymaerax.parser.ArchiveParser;
-import edu.cmu.cs.ls.keymaerax.parser.ParsedArchiveEntry;
-import scala.Tuple2;
-import scala.collection.JavaConverters;
 import scala.collection.JavaConverters$;
 import scala.collection.immutable.Map;
 
@@ -60,7 +47,7 @@ public class CodeGenerator {
 
 	public String build() throws LaunchException {
 		try {
-			generateCppCode();
+			generatedCppCode = KeYmaeraBridge.getInstance().generateCCode(hybridProgram).get(0);
 			parseCCode();
 			generateCProject();
 			makeCProject();
@@ -118,7 +105,7 @@ public class CodeGenerator {
 			// states
 			writer.println("typedef struct state {");
 			this.states.forEach(p -> {
-				writer.println("  long double " + p + ";");
+				writer.println("  long double " + p + " = 0;");
 			});
 			writer.println("} State;");
 			writer.println();
@@ -126,7 +113,7 @@ public class CodeGenerator {
 			// input
 			writer.println("typedef struct input {");
 			this.inputs.forEach(p -> {
-				writer.println("  long double " + p + ";");
+				writer.println("  long double " + p + " = 0;");
 			});
 			writer.println("} Input;");
 			writer.println();
@@ -150,18 +137,23 @@ public class CodeGenerator {
 				writer.println();
 			}
 
+			// init
+			writer.println("    init(\"" + name.replace(" ", "_") + "\");");
+			writer.println();
+			
 			for (String param : parameters) {
 				String value = graphParameters.getOrDefault(param, null);
 				if (value != null) {
 					writer.println("    params." + param + " = " + value + ";");
 				} else {
-					throw new LaunchException("could not find Parameter " + param + " in sked file");
+					//throw new LaunchException("could not find Parameter " + param + " in sked file");
+					// KeYmaera X sometimes expects programvariables to be constant and moves them to parameters
+					// but probably they are variable and set by other skills
+
+					writer.println("    registerInputVar(\"" + param + "\", &params." + param + ");");
 				}
 			}
 
-			// init
-			writer.println("    init(\"" + name.replace(" ", "_") + "\");");
-			writer.println();
 
 			// init input variables
 			states.forEach(state -> writer
@@ -211,53 +203,8 @@ public class CodeGenerator {
 
 	}
 
-	private void generateCppCode() throws LaunchException {
-		init();
 
-		scala.collection.immutable.List<ParsedArchiveEntry> archives = ArchiveParser.parser().parse(hybridProgram,
-				true);
-		for (int i = 0; i < archives.length(); i++) {
-			ParsedArchiveEntry archive = archives.apply(i);
-			Formula model = (Formula) archive.model();
-			Program prg = ((Box) ((Imply) model).right()).program();
 
-			@SuppressWarnings({ "unchecked", "rawtypes" })
-			scala.collection.immutable.List<Object> symbols = StaticSemantics.boundVars(model).symbols().toList();
-			ArrayList<BaseVariable> vars = new ArrayList<>();
-			for (int j = 0; j < symbols.size(); j++) {
-				Object s = symbols.apply(j);
-				if (s instanceof BaseVariable) {
-					vars.add((BaseVariable) s);
-				}
-			}
-
-			Tuple2<String, String> result = new CGenerator(new CControllerGenerator()).apply(prg,
-					JavaConverters.asScalaSet(vars.stream().collect(Collectors.toSet())).toSet(),
-					CGenerator.getInputs(prg));
-			generatedCppCode = result._1;
-		}
-	}
-
-	private void init() {
-		edu.cmu.cs.ls.keymaerax.btactics.ToolProvider$.MODULE$
-				.setProvider(new edu.cmu.cs.ls.keymaerax.btactics.Z3ToolProvider(toScalaMap(getZ3Config())));
-
-		edu.cmu.cs.ls.keymaerax.Configuration$.MODULE$
-				.setConfiguration(edu.cmu.cs.ls.keymaerax.FileConfiguration$.MODULE$);
-
-		java.util.HashMap<String, String> javaConfig = new java.util.HashMap<>();
-		javaConfig.put(edu.cmu.cs.ls.keymaerax.tools.KeYmaeraXTool.INIT_DERIVATION_INFO_REGISTRY(), "false");
-		javaConfig.put(edu.cmu.cs.ls.keymaerax.tools.KeYmaeraXTool.INTERPRETER(),
-				edu.cmu.cs.ls.keymaerax.bellerophon.ExhaustiveSequentialInterpreter$.class.getSimpleName());
-		Map<String, String> config = toScalaMap(javaConfig);
-
-		edu.cmu.cs.ls.keymaerax.tools.KeYmaeraXTool$.MODULE$.init(config);
-
-		System.out.println("KeYmaeraX initiliazied = " + edu.cmu.cs.ls.keymaerax.tools.KeYmaeraXTool.isInitialized());
-		if (edu.cmu.cs.ls.keymaerax.tools.KeYmaeraXTool.isInitialized()) {
-			System.out.println(edu.cmu.cs.ls.keymaerax.tools.KeYmaeraXTool.name());
-		}
-	}
 
 	public static <A, B> Map<A, B> toScalaMap(java.util.HashMap<A, B> m) {
 		return JavaConverters$.MODULE$.mapAsScalaMapConverter(m).asScala().toMap(scala.Predef$.MODULE$.$conforms());

@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -18,7 +20,8 @@ import org.eclipse.ui.console.MessageConsoleStream;
 
 public class CMDRunner {
 	private static ExecutorService EXECUTOR = Executors.newCachedThreadPool();
-
+	private static List<Runnable> SCHEDULED_TASKS = new ArrayList();
+	
 	private String path;
 	private String cmd;
 	private String logFile;
@@ -52,7 +55,6 @@ public class CMDRunner {
 			pb = pb.directory(new File(path));
 		}
 
-
 		Process p = pb.start();
 
 		if (out != null) {
@@ -79,6 +81,15 @@ public class CMDRunner {
 		}
 	}
 
+	public void scheduleTask(String name) {
+		SCHEDULED_TASKS.add(new Runnable() {
+			@Override
+			public void run() {
+				CMDRunner.this.run(name);
+			}
+		});
+	}
+
 	public void run(String name) {
 		if (EXECUTOR.isShutdown()) {
 			EXECUTOR = Executors.newCachedThreadPool();
@@ -90,7 +101,7 @@ public class CMDRunner {
 					out.println(name + " started");
 					runBlocking();
 					out.println(name + " ended");
-				} catch (IOException  e) {
+				} catch (IOException e) {
 					out.println(name + " failed");
 					e.printStackTrace(new PrintStream(out));
 				}
@@ -99,6 +110,13 @@ public class CMDRunner {
 
 	}
 
+	public synchronized static void runAllSheduled() {
+		for(Runnable runnable: SCHEDULED_TASKS) {
+			runnable.run();
+		}
+		SCHEDULED_TASKS.clear();
+	}
+	
 	public static boolean shutdownAndWait(long time) throws InterruptedException {
 		if (!EXECUTOR.isShutdown())
 			EXECUTOR.shutdown();
@@ -109,6 +127,7 @@ public class CMDRunner {
 		EXECUTOR.shutdownNow();
 		return EXECUTOR.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
 	}
+	
 
 	public CMDRunner console(String name) {
 		if (logFile != null)
@@ -124,7 +143,7 @@ public class CMDRunner {
 		}
 		if (console == null) {
 			console = new MessageConsole(name, null);
-			//console.activate();
+			// console.activate();
 			console.clearConsole();
 			conMan.addConsoles(new IConsole[] { console });
 		}

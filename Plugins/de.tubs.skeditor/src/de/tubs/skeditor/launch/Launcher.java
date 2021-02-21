@@ -36,6 +36,7 @@ public class Launcher extends LaunchConfigurationDelegate {
 
 	private Graph graph;
 	private HashMap<String, String> parameters = new HashMap<>();
+	private IProgressMonitor monitor;
 
 	@Override
 	public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor)
@@ -44,6 +45,7 @@ public class Launcher extends LaunchConfigurationDelegate {
 		console.activate();
 		console.clearConsole();
 		out = new PrintStream(console.newOutputStream());
+		this.monitor = monitor;
 
 		out.println("===Attributes===");
 		configuration.getAttributes().forEach((key, value) -> out.println(key + " = " + value));
@@ -54,16 +56,25 @@ public class Launcher extends LaunchConfigurationDelegate {
 		buildPath = configuration.getAttribute(LaunchConfigurationAttributes.BUILD_PATH, (String) null);
 		worldPath = configuration.getAttribute(LaunchConfigurationAttributes.WORLD_PATH, (String) null);
 
-		CMDRunner.cmd("/opt/ros/noetic/bin/roscore").dir(buildPath).run("roscore");
-
+		new File(buildPath).mkdir();
+		
+	
 		try {
 			try {
-
 				parseSked(skedPath);
-				buildAndRunPrograms(graph.getNodes());
+				buildAndScheduleHybridProgram(graph.getNodes());
+				buildAndSchedulePrograms(graph.getNodes());
+				
+				// all tasks are scheduled, but not actually run, start roscore and gazebo
+				CMDRunner.cmd("/opt/ros/noetic/bin/roscore").dir(buildPath).run("roscore");
+				Thread.sleep(1000); // make sure roscore initialized
 				CMDRunner.cmd("rosrun gazebo_ros gazebo " + worldPath).dir(buildPath).run("gazebo");
-				buildAndRunHybridProgram(graph.getNodes());
-			} catch (LaunchException e) {
+				Thread.sleep(5000); // make sure gazebo is inizialized
+				
+				out.println("Starting all Skills");
+				CMDRunner.runAllSheduled();			
+				
+			} catch (LaunchException | InterruptedException e) {
 				out.println();
 				out.println("Build failed: ");
 				out.println(e.getMessage());
@@ -86,10 +97,11 @@ public class Launcher extends LaunchConfigurationDelegate {
 		}
 	}
 
-	private void buildAndRunPrograms(EList<Node> nodes) throws LaunchException {
+	private void buildAndSchedulePrograms(EList<Node> nodes) throws LaunchException {
 		out.println();
 		out.println("Building programs...");
 		for (int i = 0; i < nodes.size(); i++) {
+			if(monitor.isCanceled()) return;
 			Node node = nodes.get(i);
 			out.print(node.getName().replace(" ", "_"));
 			out.print(": ");
@@ -122,20 +134,20 @@ public class Launcher extends LaunchConfigurationDelegate {
 		}
 	}
 
-	private void buildAndRunHybridProgram(List<Node> nodes) throws LaunchException {
+	private void buildAndScheduleHybridProgram(List<Node> nodes) throws LaunchException {
 		for (Node node : nodes) {
+			if(monitor.isCanceled()) return;
 			if (node.getController() != null) {
 				for (int i = 0; i < node.getController().size(); i++) {
 					String ctrl = node.getController().get(i).getCtrl();
 					String name = node.getName().replace(" ", "_");
 
-					out.print("generate executable for kyx script");
+					out.println("generate executable for kyx script");
 					String path = new CodeGenerator(name).setBuildPath(buildPath + "/kyx")
 							.setGraphParameters(parameters).setHybridProgram(ctrl).build();
-					out.println(" - RUN");
 					System.out.println(buildPath);
 					System.out.println(path);
-					CMDRunner.cmd(path).dir(buildPath).run(name);
+					CMDRunner.cmd(path).dir(buildPath).scheduleTask(name);
 
 				}
 			}
@@ -150,7 +162,7 @@ public class Launcher extends LaunchConfigurationDelegate {
 		if (!execPath.exists())
 			throw new LaunchException("could not find executable " + execPath.getAbsolutePath());
 
-		CMDRunner.cmd(execPath.getAbsolutePath()).dir(buildPath.getAbsolutePath()).run(name);
+		CMDRunner.cmd(execPath.getAbsolutePath()).dir(buildPath.getAbsolutePath()).scheduleTask(name);
 	}
 
 	private void makeProject(Node node) throws LaunchException {

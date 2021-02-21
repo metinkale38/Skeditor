@@ -43,10 +43,12 @@ public class ConfigurationTab extends AbstractLaunchConfigurationTab {
         initBuildPathComponents(comp);
         initWorldPathComponents(comp);
         
-
+        	
+        this.setDirty(true);
     }
     
 
+    
     private void initWorldPathComponents(Composite comp) {
         Label label = new Label(comp, SWT.NONE);
         label.setText(".world File:");
@@ -67,6 +69,7 @@ public class ConfigurationTab extends AbstractLaunchConfigurationTab {
 				String path = dlg.open();
 				if (path == null) return;
 				worldPath.setText(path);
+
 		        setDirty(true);
 			}
 		});
@@ -99,6 +102,7 @@ public class ConfigurationTab extends AbstractLaunchConfigurationTab {
 				String path = dlg.open();
 				if (path == null) return;
 				skedPath.setText(path);
+
 		        setDirty(true);
 			}
 		});
