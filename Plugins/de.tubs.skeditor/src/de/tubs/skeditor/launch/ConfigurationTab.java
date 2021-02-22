@@ -8,6 +8,8 @@ import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Button;
@@ -42,9 +44,6 @@ public class ConfigurationTab extends AbstractLaunchConfigurationTab {
         initSkedPathComponents(comp);
         initBuildPathComponents(comp);
         initWorldPathComponents(comp);
-        
-        	
-        this.setDirty(true);
     }
     
 
@@ -54,6 +53,14 @@ public class ConfigurationTab extends AbstractLaunchConfigurationTab {
         label.setText(".world File:");
 
         worldPath = new Text(comp, SWT.BORDER);
+        worldPath.addModifyListener(new ModifyListener() {
+
+			@Override
+			public void modifyText(ModifyEvent e) {
+		        setDirty(true);
+		        updateLaunchConfigurationDialog();						
+			}
+        });
         
         worldPathBtn = new Button(comp, SWT.BORDER);
         worldPathBtn.setText("...");
@@ -71,6 +78,7 @@ public class ConfigurationTab extends AbstractLaunchConfigurationTab {
 				worldPath.setText(path);
 
 		        setDirty(true);
+		        updateLaunchConfigurationDialog();
 			}
 		});
         
@@ -87,6 +95,14 @@ public class ConfigurationTab extends AbstractLaunchConfigurationTab {
         label.setText(".sked File:");
 
         skedPath = new Text(comp, SWT.BORDER);
+        skedPath.addModifyListener(new ModifyListener() {
+
+			@Override
+			public void modifyText(ModifyEvent e) {
+		        setDirty(true);
+		        updateLaunchConfigurationDialog();						
+			}
+        });
         
         skedPathBtn = new Button(comp, SWT.BORDER);
         skedPathBtn.setText("...");
@@ -104,6 +120,7 @@ public class ConfigurationTab extends AbstractLaunchConfigurationTab {
 				skedPath.setText(path);
 
 		        setDirty(true);
+		        updateLaunchConfigurationDialog();
 			}
 		});
         
@@ -118,6 +135,14 @@ public class ConfigurationTab extends AbstractLaunchConfigurationTab {
         label.setText("Build Path:");
 
         buildPath = new Text(comp, SWT.BORDER);
+        buildPath.addModifyListener(new ModifyListener() {
+
+			@Override
+			public void modifyText(ModifyEvent e) {
+		        setDirty(true);
+		        updateLaunchConfigurationDialog();						
+			}
+        });
         
         buildPathBtn = new Button(comp, SWT.BORDER);
         buildPathBtn.setText("...");
@@ -132,11 +157,12 @@ public class ConfigurationTab extends AbstractLaunchConfigurationTab {
 				String path = dlg.open();
 				if (path == null) return;
 				buildPath.setText(path);
+
 		        setDirty(true);
+		        updateLaunchConfigurationDialog();		        
 			}
 		});
         
-
         GridDataFactory.swtDefaults().applyTo(label);
         GridDataFactory.fillDefaults().grab(true, false).applyTo(skedPathBtn);
         GridDataFactory.swtDefaults().applyTo(skedPathBtn);
@@ -174,6 +200,8 @@ public class ConfigurationTab extends AbstractLaunchConfigurationTab {
         return "Skill Graph Runner";
     }
 
+    
+    
 
 
 }
