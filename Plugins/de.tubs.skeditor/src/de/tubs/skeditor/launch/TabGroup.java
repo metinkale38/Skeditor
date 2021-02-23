@@ -9,7 +9,7 @@ public class TabGroup extends AbstractLaunchConfigurationTabGroup {
 
     @Override
     public void createTabs(ILaunchConfigurationDialog dialog, String mode) {
-        setTabs(new ILaunchConfigurationTab[] { new ConfigurationTab() ,new CommonTab()});
+        setTabs(new ILaunchConfigurationTab[] { new ConfigurationTab()});
     }
 
 }

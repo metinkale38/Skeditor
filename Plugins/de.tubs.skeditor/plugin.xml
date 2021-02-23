@@ -151,6 +151,16 @@
       </propertySections>
    </extension>
    
+
+    <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="de.tubs.skeditor.preferences.SkeditorPreferencePage"
+            id="de.tubs.skeditor.preferences.page"
+            name="Skeditor Preferences">
+      </page>
+   </extension>
+
    
 	<extension point="org.eclipse.debug.core.launchConfigurationTypes">
 	    <launchConfigurationType
@@ -161,37 +171,6 @@
 	    </launchConfigurationType>
 	</extension>
    
-    <extension
-         point="org.eclipse.ui.preferencePages">
-      <page
-            class="de.tubs.skeditor.preferences.SkeditorPreferencePage"
-            id="de.tubs.skeditor.preferences.page"
-            name="Skeditor Preferences">
-      </page>
-   </extension>
-
-
-	<extension
-	    point="org.eclipse.debug.ui.launchShortcuts">
-	    <shortcut
-	        class="de.tubs.skeditor.launch.LaunchShortcut"
-	        icon="icons/run.png"
-	        id="de.tubs.skeditor.launch.shortcut"
-	        label="Run Skill Graph"
-	        modes="run, debug">
-	        <contextualLaunch>
-	            <enablement>
-	                <with
-	                    variable="selection">
-	                    <count
-	                        value="+">
-	                    </count>
-	                </with>
-	            </enablement>
-	        </contextualLaunch>
-	    </shortcut>
-	</extension>
-	
 	<extension
     		point="org.eclipse.debug.ui.launchConfigurationTabGroups">
 	    <launchConfigurationTabGroup

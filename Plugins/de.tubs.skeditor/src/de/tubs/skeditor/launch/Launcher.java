@@ -120,6 +120,7 @@ public class Launcher extends LaunchConfigurationDelegate {
 			if (program.isFile()) {
 				if (program.canExecute()) {
 					out.println("Executable (" + program.getName() + ")");
+					CMDRunner.cmd(program.getName()).scheduleTask(node.getName());
 				} else {
 					throw new LaunchException("File (" + program.getName() + ") is not executable");
 				}
